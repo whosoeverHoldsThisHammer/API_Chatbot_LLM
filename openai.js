@@ -138,14 +138,11 @@ const historial = [
     new AIMessage("Hola Juan, ¿en qué puedo ayudarte?"),
 ];
 
-const response = await conversationChain.invoke({
-    chat_history: historial,
-    input: "Cómo agrego un médico radiólogo?",
-});
-
 
 const answer = async (query)=> {
     
+    // TODO agregar historial
+
     let result = await conversationChain.invoke({
         chat_history: historial,
         input: query,
