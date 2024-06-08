@@ -1,7 +1,9 @@
 {
   "dependencies": {
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "@langchain/openai": "^0.0.34",
+    "@langchain/community": "^0.2.4"
   },
   "type": "module"
 }
