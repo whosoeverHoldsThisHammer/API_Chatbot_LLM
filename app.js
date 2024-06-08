@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json())
 app.use(routerMaster)
 
-const PORT = process.env.PORT
+const PORT = 3000 //process.env.PORT
 
 app.listen(PORT, ()=> 
     console.log('Server express levantado')
