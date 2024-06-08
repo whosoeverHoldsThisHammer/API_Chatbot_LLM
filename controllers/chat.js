@@ -1,15 +1,13 @@
-import askModel from '../openai.js'
+import answer from '../openai.js'
 
-// GET
 const generateAnswer = async (req, res) => {
     try {
 
-        let answer = askModel
+        const response = await answer(req.body.human_message);
+        res.json(response)
 
-        res.json(answer)
-        
     } catch (error) {
-        
+        console.log("Error!")
     }
   
 }

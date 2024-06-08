@@ -19,8 +19,14 @@ const prompt = ChatPromptTemplate.fromMessages([
 const parser = new StringOutputParser();
 const chain = prompt.pipe(model).pipe(parser)
 
-const answer = await chain.invoke({
-    input: "perro"
-})
+const answer = async (query)=> {
+    
+    let result = await chain.invoke({
+        input: query
+    })
+
+    return result
+}
+
 
 export default answer
