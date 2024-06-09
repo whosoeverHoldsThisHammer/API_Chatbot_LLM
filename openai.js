@@ -101,17 +101,12 @@ const conversationChain = await createRetrievalChain({
     retriever: retrieverChain,
 });
 
-
-// Está simulando el historial
-const historial = [
-    new HumanMessage("Me llamo Juan"),
-    new AIMessage("Hola Juan, ¿en qué puedo ayudarte?"),
-];
-
-
-const answer = async (query)=> {
+// Recibe en el body la consulta y el historial de mensajes
+const answer = async (query, history)=> {
     
-    // TODO agregar historial
+    let historial = history.map(item => {
+      return item.role === "HumanMessage" ? new HumanMessage(item.content) : new AIMessage(item.content)
+    })
 
     let result = await conversationChain.invoke({
         chat_history: historial,
