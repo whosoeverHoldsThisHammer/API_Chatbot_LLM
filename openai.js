@@ -77,7 +77,7 @@ const system_prompt = `
 1. Eres un asistente que contesta preguntas de nuestra base de conocimiento.
 2. Responde la pregunta del usuario a partir del siguiente contexto: {context}.
 3. No contestes preguntas sobre temas que no estén en el contexto: {context}
-5. Cuando no encuentres información en el contexto {context} contesta "No encontré ese tema en mi base de conocimiento, por favor cargá un ticket en Jira"""
+4. Cuando no encuentres información en el contexto {context} contesta "No encontré ese tema en mi base de conocimiento, por favor cargá un ticket en Jira"""
 `
 
 // Instrucciones generales para el bot
@@ -102,17 +102,12 @@ const conversationChain = await createRetrievalChain({
     retriever: retrieverChain,
 });
 
-
-// Está simulando el historial
-const historial = [
-    new HumanMessage("Me llamo Juan"),
-    new AIMessage("Hola Juan, ¿en qué puedo ayudarte?"),
-];
-
-
-const answer = async (query)=> {
+// Recibe en el body la consulta y el historial de mensajes
+const answer = async (query, history)=> {
     
-    // TODO agregar historial
+    let historial = history.map(item => {
+      return item.role === "HumanMessage" ? new HumanMessage(item.content) : new AIMessage(item.content)
+    })
 
     let result = await conversationChain.invoke({
         chat_history: historial,
