@@ -5,7 +5,7 @@ const generateAnswer = async (req, res) => {
 
         // console.log(req.boy.history)
 
-        const response = await answer(req.body.human_message);
+        const response = await answer(req.body.content);
         res.json(response)
 
     } catch (error) {
