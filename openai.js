@@ -2,6 +2,7 @@ import { ChatOpenAI } from "@langchain/openai"
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
@@ -10,7 +11,7 @@ import { createRetrievalChain } from "langchain/chains/retrieval";
 import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
 import { MessagesPlaceholder } from "@langchain/core/prompts";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
-
+import { Pinecone } from "@pinecone-database/pinecone"
 
 import * as dotenv from "dotenv";
 
@@ -21,19 +22,51 @@ dotenv.config();
 const model = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
     temperature: 0,
-    openAIApiKey: process.env.OPENAI_API_KEY
   });
 
-
-// Carga los documentos (Llevarlo a otro módulo)
-const loader = new DirectoryLoader(
-  "data",
-  {
-    ".txt": (path) => new TextLoader(path),
-  }
+const pc = new Pinecone(
+  { apiKey:  process.env.PINECONE_API_KEY }
 );
 
+const name = "cn-arg-index"
+const dimension = 1536 // La dimensión depende de la API que usemos de embeddings. Con OpenAI es 1536
+
+
+// Revisa que exista el índice
+const indices = await pc.listIndexes()
+console.log(indices)
+
+if(!indices.indexes.includes(name)){
+  console.log(`El indice ${name} no existe`)
+  console.log("Creando índice...")
+
+  await pc.createIndex({
+    name: name,
+    dimension: dimension,
+    metric: 'cosine',
+    spec: { 
+        serverless: { 
+            cloud: process.env.PINECONE_CLOUD, 
+            region: process.env.PINECONE_REGION 
+        }
+    } 
+  });
+} else {
+  console.log(`El indice ${name} ya existe`)
+}
+
+
+// Carga los documentos
+const loader = new DirectoryLoader("./data",
+  {
+    ".txt": (path) => new TextLoader(path),
+    ".pdf": (path) => new PDFLoader(path, { splitPages: false })
+  }
+)
+
 const docs = await loader.load();
+console.log({ docs })
+
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 1024,
@@ -44,15 +77,15 @@ const slited = await splitter.splitDocuments(docs);
 const embeddings = new OpenAIEmbeddings();
 
 
+
 // Crea el vector de incrustaciones
-const vectorStore = await FaissStore.fromDocuments(
+/* const vectorStore = await FaissStore.fromDocuments(
     slited,
     embeddings
   );
   
   
 const retriever = vectorStore.asRetriever({ k: 3 });
-
 
 // Instrucciones para que reformule la pregunta teniendo en cuenta el historial
 const retrieverPrompt = ChatPromptTemplate.fromMessages([
@@ -101,20 +134,22 @@ const conversationChain = await createRetrievalChain({
     combineDocsChain: chain,
     retriever: retrieverChain,
 });
+*/
 
 // Recibe en el body la consulta y el historial de mensajes
 const answer = async (query, history)=> {
     
-    let historial = history.map(item => {
+    /* let historial = history.map(item => {
       return item.role === "HumanMessage" ? new HumanMessage(item.content) : new AIMessage(item.content)
     })
 
     let result = await conversationChain.invoke({
         chat_history: historial,
         input: query,
-    });
+    }); 
     
-    return result
+    return result */
+    return true
 }
 
 
