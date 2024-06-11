@@ -12,6 +12,7 @@ import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retr
 import { MessagesPlaceholder } from "@langchain/core/prompts";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { Pinecone } from "@pinecone-database/pinecone"
+import { PineconeStore } from "@langchain/pinecone";
 
 import * as dotenv from "dotenv";
 
@@ -28,7 +29,7 @@ const pc = new Pinecone(
   { apiKey:  process.env.PINECONE_API_KEY }
 );
 
-const name = "cn-arg-index"
+const pineconeIndex = "cn-arg-index"
 const dimension = 1536 // La dimensión depende de la API que usemos de embeddings. Con OpenAI es 1536
 
 
@@ -36,12 +37,14 @@ const dimension = 1536 // La dimensión depende de la API que usemos de embeddin
 const indices = await pc.listIndexes()
 console.log(indices)
 
-if(!indices.indexes.includes(name)){
-  console.log(`El indice ${name} no existe`)
+const existe = indices.indexes.some(index => index.name === pineconeIndex);
+
+if(!existe){
+  console.log(`El indice ${pineconeIndex} no existe`)
   console.log("Creando índice...")
 
   await pc.createIndex({
-    name: name,
+    name: pineconeIndex,
     dimension: dimension,
     metric: 'cosine',
     spec: { 
@@ -52,12 +55,12 @@ if(!indices.indexes.includes(name)){
     } 
   });
 } else {
-  console.log(`El indice ${name} ya existe`)
+  console.log(`El indice ${pineconeIndex} ya existe`)
 }
 
 
 // Carga los documentos
-const loader = new DirectoryLoader("./data",
+/* const loader = new DirectoryLoader("./data",
   {
     ".txt": (path) => new TextLoader(path),
     ".pdf": (path) => new PDFLoader(path, { splitPages: false })
@@ -73,16 +76,14 @@ const splitter = new RecursiveCharacterTextSplitter({
   chunkOverlap: 200,
 });
 
-const slited = await splitter.splitDocuments(docs);
+const splited = await splitter.splitDocuments(docs);
 const embeddings = new OpenAIEmbeddings();
 
-
-
 // Crea el vector de incrustaciones
-/* const vectorStore = await FaissStore.fromDocuments(
-    slited,
-    embeddings
-  );
+const vectorStore = await PineconeStore.fromDocuments(splited, embeddings, {
+  pineconeIndex,
+  maxConcurrency: 10, // Cantidad de batches que puede mandar al mismo tiempo. 1 batch = 1000 vectores
+});
   
   
 const retriever = vectorStore.asRetriever({ k: 3 });
