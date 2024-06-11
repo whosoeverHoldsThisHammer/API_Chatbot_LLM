@@ -29,7 +29,7 @@ const pc = new Pinecone(
   { apiKey:  process.env.PINECONE_API_KEY }
 );
 
-const pineconeIndex = "cn-arg-index"
+const name = "cn-arg-index"
 const dimension = 1536 // La dimensión depende de la API que usemos de embeddings. Con OpenAI es 1536
 
 
@@ -37,14 +37,16 @@ const dimension = 1536 // La dimensión depende de la API que usemos de embeddin
 const indices = await pc.listIndexes()
 console.log(indices)
 
-const existe = indices.indexes.some(index => index.name === pineconeIndex);
+const existe = indices.indexes.some(index => index.name === name);
+let pineconeIndex
+
 
 if(!existe){
-  console.log(`El indice ${pineconeIndex} no existe`)
+  console.log(`El indice ${name} no existe`)
   console.log("Creando índice...")
 
-  await pc.createIndex({
-    name: pineconeIndex,
+  pineconeIndex = await pc.createIndex({
+    name: name,
     dimension: dimension,
     metric: 'cosine',
     spec: { 
@@ -55,12 +57,15 @@ if(!existe){
     } 
   });
 } else {
-  console.log(`El indice ${pineconeIndex} ya existe`)
+  console.log(`El indice ${name} ya existe`)
+
+  pineconeIndex = pc.Index(name)
+  console.log(pineconeIndex)
+
 }
 
-
 // Carga los documentos
-/* const loader = new DirectoryLoader("./data",
+const loader = new DirectoryLoader("./data",
   {
     ".txt": (path) => new TextLoader(path),
     ".pdf": (path) => new PDFLoader(path, { splitPages: false })
@@ -82,7 +87,7 @@ const embeddings = new OpenAIEmbeddings();
 // Crea el vector de incrustaciones
 const vectorStore = await PineconeStore.fromDocuments(splited, embeddings, {
   pineconeIndex,
-  maxConcurrency: 10, // Cantidad de batches que puede mandar al mismo tiempo. 1 batch = 1000 vectores
+  maxConcurrency: 5, // Cantidad de batches que puede mandar al mismo tiempo. 1 batch = 1000 vectores
 });
   
   
@@ -135,12 +140,12 @@ const conversationChain = await createRetrievalChain({
     combineDocsChain: chain,
     retriever: retrieverChain,
 });
-*/
+
 
 // Recibe en el body la consulta y el historial de mensajes
 const answer = async (query, history)=> {
     
-    /* let historial = history.map(item => {
+    let historial = history.map(item => {
       return item.role === "HumanMessage" ? new HumanMessage(item.content) : new AIMessage(item.content)
     })
 
@@ -149,8 +154,7 @@ const answer = async (query, history)=> {
         input: query,
     }); 
     
-    return result */
-    return true
+    return result
 }
 
 
