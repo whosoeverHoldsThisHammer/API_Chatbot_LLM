@@ -64,7 +64,7 @@ if(!existe){
 
 }
 
-// Carga los documentos
+// Carga los documentos (la primera vez)
 const loader = new DirectoryLoader("./data",
   {
     ".txt": (path) => new TextLoader(path),
@@ -84,12 +84,22 @@ const splitter = new RecursiveCharacterTextSplitter({
 const splited = await splitter.splitDocuments(docs);
 const embeddings = new OpenAIEmbeddings();
 
-// Crea el vector de incrustaciones
+// Crea el vector de incrustaciones en Pinecone (la primera vez)
 const vectorStore = await PineconeStore.fromDocuments(splited, embeddings, {
   pineconeIndex,
   maxConcurrency: 5, // Cantidad de batches que puede mandar al mismo tiempo. 1 batch = 1000 vectores
 });
   
+
+// TODO
+// Cargar los documentos que fueron vectorizados y guardados en Pinecone
+
+/* const vectorStore = await PineconeStore.fromExistingIndex(
+  new OpenAIEmbeddings(),
+  { pineconeIndex }
+);
+*/
+
   
 const retriever = vectorStore.asRetriever({ k: 3 });
 
