@@ -153,7 +153,7 @@ const conversationChain = await createRetrievalChain({
 const answer = async (query, history)=> {
     
     let historial = history.map(item => {
-      return item.role === "HumanMessage" ? new HumanMessage(item.content) : new AIMessage(item.content)
+      return item.role === "human" ? new HumanMessage(item.content) : new AIMessage(item.content)
     })
 
     let result = await conversationChain.invoke({
