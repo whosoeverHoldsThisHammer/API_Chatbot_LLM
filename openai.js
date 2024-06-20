@@ -3,6 +3,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
@@ -59,7 +60,8 @@ if(!existe){
   const loader = new DirectoryLoader("./data",
     {
       ".txt": (path) => new TextLoader(path),
-      ".pdf": (path) => new PDFLoader(path, { splitPages: false })
+      ".pdf": (path) => new PDFLoader(path, { splitPages: false }),
+      ".docx": (path) => new DocxLoader(path)
     }
   )
 
